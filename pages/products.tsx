@@ -99,7 +99,7 @@ export default function Products() {
             key={item.original}
             src={item.original}
             alt="image"
-            layout="responsive"
+            // layout="responsive"
           />
         ))}
       </Carousel>

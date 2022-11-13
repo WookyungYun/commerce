@@ -1,8 +1,9 @@
 import CustomEditor from '@components/Editor'
-import Head from 'next/head'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import Carousel from 'nuka-carousel/lib/carousel'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { EditorState, convertFromRaw, convertToRaw } from 'draft-js'
 // import ImageGallery from 'react-image-gallery'
 
 const images = [
@@ -62,7 +63,39 @@ const images = [
 
 export default function Products() {
   const [index, setIndex] = useState(0)
-  // return <ImageGallery items={images} />
+
+  const router = useRouter()
+  const { id: productId } = router.query
+  const [editorState, setEditorState] = useState<EditorState | undefined>(
+    undefined
+  )
+  useEffect(() => {
+    if (productId !== null) {
+      fetch(`/api/get-product?id=${productId}`)
+        .then((res) => res.json())
+        .then(() => {
+          alert('success')
+        })
+    }
+  }, [productId])
+  const handleSave = () => {
+    if (editorState) {
+      fetch('/api/update-product', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: String(productId),
+          contents: JSON.stringify(
+            convertToRaw(editorState.getCurrentContent())
+          ),
+        }),
+      })
+        .then((res) => res.json())
+        .then(() => {
+          alert('success')
+        })
+    }
+  }
+
   return (
     <>
       <Carousel
@@ -96,7 +129,13 @@ export default function Products() {
           </div>
         ))}
       </div>
-      <CustomEditor />
+      {editorState != null && (
+        <CustomEditor
+          editorState={editorState}
+          onEditorStateChange={setEditorState}
+          onSave={handleSave}
+        />
+      )}
     </>
   )
 }
